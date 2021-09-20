@@ -90,6 +90,8 @@ function get_env( s : string ) : string option {
 
 var put_env : string -> string -> void = neko "$loader.loadprim('std@put_env',2)"
 
+var unset_env : string -> void = neko "$loader.loadprim('std@unset_env',1)"
+
 function get_cwd() : string {
 	neko "@get_cwd()"
 }

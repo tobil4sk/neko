@@ -104,6 +104,25 @@ static value put_env( value e, value v ) {
 	return val_true;
 }
 
+
+/**
+	unset_env : var:string -> void
+	<doc>Delete environment variable value</doc>
+**/
+static value unset_env( value e ) {
+	val_check(e,string);
+#ifdef NEKO_WINDOWS
+	buffer b = alloc_buffer(NULL);
+	val_buffer(b, e);
+	buffer_append_sub(b, "=", 1);
+	if( putenv(val_string(buffer_to_string(b))) != 0 )
+#else
+	if( unsetenv(val_string(e)) != 0 )
+#endif
+		neko_error();
+	return val_true;
+}
+
 /**
 	sys_sleep : number -> void
 	<doc>Sleep a given number of seconds</doc>
@@ -687,6 +706,7 @@ static value win_env_changed() {
 
 DEFINE_PRIM(get_env,1);
 DEFINE_PRIM(put_env,2);
+DEFINE_PRIM(unset_env, 1);
 DEFINE_PRIM(set_time_locale,1);
 DEFINE_PRIM(get_cwd,0);
 DEFINE_PRIM(set_cwd,1);

@@ -172,6 +172,7 @@ static value process_run( value cmd, value vargs ) {
 			}
 		}
 		sargs = buffer_to_string(b);
+		printf("%s", val_string(sargs));
 		p = (vprocess*)alloc_private(sizeof(vprocess));
 		// startup process
 		sattr.nLength = sizeof(sattr);

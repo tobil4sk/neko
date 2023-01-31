@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef _MSC_VER
+#ifdef NEKO_WINDOWS
 #include <winsock2.h>
 #include <wincrypt.h>
 #else
@@ -678,7 +678,7 @@ static value dgst_make(value data, value alg){
 		val_throw(alloc_string("Invalid hash algorithm"));
 		return val_null;
 	}
-	
+
 	out = alloc_empty_string( mbedtls_md_get_size(md) );
 	if( (r = mbedtls_md( md, (const unsigned char *)val_string(data), val_strlen(data), (unsigned char *)val_string(out) )) != 0 )
 		return ssl_error(r);
@@ -741,7 +741,7 @@ static value dgst_verify( value data, value sign, value key, value alg ){
 	return val_true;
 }
 
-#if _MSC_VER
+#ifdef NEKO_WINDOWS
 
 static void threading_mutex_init_alt( mbedtls_threading_mutex_t *mutex ){
 	if( mutex == NULL )
@@ -776,8 +776,8 @@ static int threading_mutex_unlock_alt( mbedtls_threading_mutex_t *mutex ){
 #endif
 
 void ssl_main() {
-#if _MSC_VER
-	mbedtls_threading_set_alt( threading_mutex_init_alt, threading_mutex_free_alt, 
+#ifdef NEKO_WINDOWS
+	mbedtls_threading_set_alt( threading_mutex_init_alt, threading_mutex_free_alt,
                            threading_mutex_lock_alt, threading_mutex_unlock_alt );
 #endif
 

@@ -6,7 +6,7 @@ set(config ${MbedTLS_source}/include/mbedtls/config.h)
 file(READ ${config} content)
 
 # disable support for SSL 3.0
-string(REPLACE 
+string(REPLACE
 	"#define MBEDTLS_SSL_PROTO_SSL3"
 	"//#define MBEDTLS_SSL_PROTO_SSL3"
 	content ${content}
@@ -14,14 +14,14 @@ string(REPLACE
 
 if (WIN32)
 	# allow alternate threading implementation
-	string(REPLACE 
+	string(REPLACE
 		"//#define MBEDTLS_THREADING_ALT"
 		"#define MBEDTLS_THREADING_ALT"
 		content ${content}
 	)
 	# disable the TCP/IP networking routines
 	# such that it wouldn't interfere with the #include <windows.h> in our threading_alt.h
-	string(REPLACE 
+	string(REPLACE
 		"#define MBEDTLS_NET_C"
 		"//#define MBEDTLS_NET_C"
 		content ${content}
@@ -30,9 +30,16 @@ if (WIN32)
 	file(COPY ${source}/libs/ssl/threading_alt.h
 		DESTINATION ${MbedTLS_source}/include/mbedtls/
 	)
+
+	if (MINGW)
+		execute_process(
+			COMMAND patch -p1 --forward -i ${source}/cmake/fix-mbedtls-cmakelists.patch
+			WORKING_DIRECTORY ${MbedTLS_source}
+		)
+	endif()
 else()
 	# enable pthread mutexes
-	string(REPLACE 
+	string(REPLACE
 		"//#define MBEDTLS_THREADING_PTHREAD"
 		"#define MBEDTLS_THREADING_PTHREAD"
 		content ${content}
@@ -40,25 +47,25 @@ else()
 endif()
 
 # enable the HAVEGE random generator
-string(REPLACE 
+string(REPLACE
 	"//#define MBEDTLS_HAVEGE_C"
 	"#define MBEDTLS_HAVEGE_C"
 	content ${content}
 )
 # enable support for (rare) MD2-signed X.509 certs
-string(REPLACE 
+string(REPLACE
 	"//#define MBEDTLS_MD2_C"
 	"#define MBEDTLS_MD2_C"
 	content ${content}
 )
 # enable support for (rare) MD4-signed X.509 certs
-string(REPLACE 
+string(REPLACE
 	"//#define MBEDTLS_MD4_C"
 	"#define MBEDTLS_MD4_C"
 	content ${content}
 )
 # allow use of mutexes within mbed TLS
-string(REPLACE 
+string(REPLACE
 	"//#define MBEDTLS_THREADING_C"
 	"#define MBEDTLS_THREADING_C"
 	content ${content}

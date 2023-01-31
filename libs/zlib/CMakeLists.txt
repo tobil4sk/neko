@@ -18,7 +18,11 @@ if (STATIC_ZLIB)
 			${ARG_PIC}
 		)
 	endif()
-	if (WIN32)
+	if (MINGW)
+		set(ZLIB_LIBRARIES
+			${CMAKE_BINARY_DIR}/libs/src/install-prefix/lib/libzlibstatic.a
+		)
+	elseif (WIN32)
 		set(ZLIB_LIBRARIES
 			optimized ${CMAKE_BINARY_DIR}/libs/src/install-prefix/lib/zlibstatic.lib
 			debug ${CMAKE_BINARY_DIR}/libs/src/install-prefix/lib/zlibstaticd.lib
@@ -46,7 +50,7 @@ if (STATIC_ZLIB)
 		CMAKE_ARGS ${ZLIB_CMAKE_ARGS}
 		INSTALL_COMMAND cd ${CMAKE_BINARY_DIR}/libs/src/Zlib-build &&
 			${CMAKE_COMMAND} --build . --target install --config ${config}
-		BYPRODUCTS ${ZLIB_LIBRARIES}
+		BUILD_BYPRODUCTS ${ZLIB_LIBRARIES}
 	)
 	set_target_properties(Zlib PROPERTIES ${EP_PROPS})
 	set(ZLIB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/libs/src/install-prefix/include)

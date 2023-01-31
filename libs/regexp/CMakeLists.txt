@@ -11,6 +11,15 @@ if (STATIC_PCRE2)
 			"https://sourceforge.net/projects/pcre/files/pcre2/10.37/pcre2-10.37.tar.gz/download"
 		URL_MD5 a0b59d89828f62d2e1caac04f7c51e0b
 	)
+	if (WIN32 AND NOT MINGW)
+		set(PCRE2_LIBRARIES
+			optimized ${CMAKE_BINARY_DIR}/libs/src/install-prefix/lib/pcre2-8.lib
+			debug ${CMAKE_BINARY_DIR}/libs/src/install-prefix/lib/pcre2-8d.lib
+		)
+	else()
+		set(PCRE2_LIBRARIES ${CMAKE_BINARY_DIR}/libs/src/install-prefix/lib/libpcre2-8.a)
+	endif()
+
 	if (WIN32)
 		ExternalProject_Add(pcre2
 			${EP_CONFIGS}
@@ -23,10 +32,6 @@ if (STATIC_PCRE2)
 				-DPCRE2_BUILD_TESTS=OFF
 				-DPCRE2_SUPPORT_JIT=ON
 				-DPCRE2_SUPPORT_UNICODE=ON
-		)
-		set(PCRE2_LIBRARIES
-			optimized ${CMAKE_BINARY_DIR}/libs/src/install-prefix/lib/pcre2-8.lib
-			debug ${CMAKE_BINARY_DIR}/libs/src/install-prefix/lib/pcre2-8d.lib
 		)
 	else()
 		if (APPLE)
@@ -54,7 +59,7 @@ if (STATIC_PCRE2)
 				make "CFLAGS=${PCRE_CFLAGS}"
 			INSTALL_COMMAND cd ${CMAKE_BINARY_DIR}/libs/src/pcre2 &&
 				make install
-			BYPRODUCTS ${PCRE2_LIBRARIES}
+			BUILD_BYPRODUCTS ${PCRE2_LIBRARIES}
 		)
 	endif()
 	set_target_properties(pcre2 PROPERTIES ${EP_PROPS})

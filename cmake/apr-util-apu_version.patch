@@ -1,0 +1,17 @@
+Adapted from: http://svn.apache.org/viewvc/apr/apr/trunk/include/apr_version.h?r1=731056&r2=983400
+Fixes a preprocessor error on MINGW
+--- a/include/apu_version.h
++++ b/include/apu_version.h
+@@ -93,9 +93,9 @@
+ 
+ /** An alternative formatted string of APR's version */
+ /* macro for Win32 .rc files using numeric csv representation */
+-#define APU_VERSION_STRING_CSV APU_MAJOR_VERSION ##, \
+-                             ##APU_MINOR_VERSION ##, \
+-                             ##APU_PATCH_VERSION
++#define APU_VERSION_STRING_CSV APU_MAJOR_VERSION, \
++                               APU_MINOR_VERSION, \
++                               APU_PATCH_VERSION
+ 
+ 
+ #ifndef APU_VERSION_ONLY

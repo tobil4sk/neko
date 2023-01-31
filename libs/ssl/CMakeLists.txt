@@ -19,13 +19,12 @@ if (STATIC_MBEDTLS)
 			${ARG_PIC}
 		)
 	endif()
-	if (WIN32)
+	if (WIN32 AND NOT MINGW)
 		set(MBEDTLS_LIBRARIES
 			${CMAKE_BINARY_DIR}/libs/src/MbedTLS-build/library/${CMAKE_CFG_INTDIR}/mbedx509.lib
 			${CMAKE_BINARY_DIR}/libs/src/MbedTLS-build/library/${CMAKE_CFG_INTDIR}/mbedtls.lib
 			${CMAKE_BINARY_DIR}/libs/src/MbedTLS-build/library/${CMAKE_CFG_INTDIR}/mbedcrypto.lib
 		)
-		target_link_libraries(ssl.ndll ws2_32 Advapi32 Crypt32)
 	else()
 		set(MBEDTLS_LIBRARIES
 			${CMAKE_BINARY_DIR}/libs/src/MbedTLS-build/library/libmbedx509.a
@@ -33,14 +32,20 @@ if (STATIC_MBEDTLS)
 			${CMAKE_BINARY_DIR}/libs/src/MbedTLS-build/library/libmbedcrypto.a
 		)
 	endif()
+	if (WIN32)
+		target_link_libraries(ssl.ndll ws2_32 Advapi32 Crypt32)
+	endif()
 	ExternalProject_Add(MbedTLS
 		${EP_CONFIGS}
 		URL https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/mbedtls-2.13.1.tar.gz
 		URL_MD5 e251b86046db6c05167b5803de9c6694
 		CMAKE_ARGS ${MBEDTLS_CMAKE_ARGS}
-		PATCH_COMMAND ${CMAKE_COMMAND} -Dsource=${CMAKE_SOURCE_DIR} -DMbedTLS_source=${CMAKE_BINARY_DIR}/libs/src/MbedTLS -P ${CMAKE_SOURCE_DIR}/cmake/patch_mbedtls.cmake
+		PATCH_COMMAND ${CMAKE_COMMAND}
+			-Dsource=${CMAKE_SOURCE_DIR} -DMbedTLS_source=${CMAKE_BINARY_DIR}/libs/src/MbedTLS -DMINGW=${MINGW}
+			-P ${CMAKE_SOURCE_DIR}/cmake/patch_mbedtls.cmake
+			--trace
 		INSTALL_COMMAND echo skip install
-		BYPRODUCTS ${MBEDTLS_LIBRARIES}
+		BUILD_BYPRODUCTS ${MBEDTLS_LIBRARIES}
 	)
 	set_target_properties(MbedTLS PROPERTIES ${EP_PROPS})
 	set(MBEDTLS_INCLUDE_DIR ${CMAKE_BINARY_DIR}/libs/src/MbedTLS/include)

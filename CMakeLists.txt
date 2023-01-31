@@ -119,6 +119,8 @@ set(external_deps
 
 if (WIN32)
 	set(STATIC_DEPS_DEFAULT "all")
+
+	set(WINDOWS_DLLS "")
 else()
 	set(STATIC_DEPS_DEFAULT "none")
 
@@ -302,9 +304,18 @@ if (STATIC_BOEHMGC OR WIN32)
 	set(GC_INCLUDE_DIR ${CMAKE_BINARY_DIR}/libs/src/BoehmGC-build/include)
 
 	if (WIN32)
-		set(GC_LIBRARIES
-			${CMAKE_BINARY_DIR}/libs/src/BoehmGC-build/${CMAKE_CFG_INTDIR}/gcmt-dll.lib
-		)
+		if (MINGW)
+			set(GC_LIBRARIES
+				${CMAKE_BINARY_DIR}/libs/src/BoehmGC-build/${CMAKE_CFG_INTDIR}/libgcmt-dll.dll.a
+			)
+			set(GCMT_DLL_NAME libgcmt-dll.dll)
+		else()
+			set(GC_LIBRARIES
+				${CMAKE_BINARY_DIR}/libs/src/BoehmGC-build/${CMAKE_CFG_INTDIR}/gcmt-dll.lib
+			)
+			set(GCMT_DLL_NAME gcmt-dll.dll)
+		endif()
+		set(GCMT_DLL ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${GCMT_DLL_NAME})
 		ExternalProject_Add(BoehmGC
 			${EP_CONFIGS}
 			${BoehmGC_CONFIGS}
@@ -319,15 +330,15 @@ if (STATIC_BOEHMGC OR WIN32)
 				${CMAKE_COMMAND} -E copy_directory
 					${CMAKE_BINARY_DIR}/libs/src/BoehmGC/include
 					${CMAKE_BINARY_DIR}/libs/src/BoehmGC-build/include/gc
+				COMMAND
+				${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/libs/src/BoehmGC-build/${CMAKE_CFG_INTDIR}/${GCMT_DLL_NAME} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+			BUILD_BYPRODUCTS
+				${GC_LIBRARIES}
+				${GCMT_DLL}
 		)
-		add_custom_command(OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gcmt-dll.dll
-			DEPENDS BoehmGC
-			COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/libs/src/BoehmGC-build/${CMAKE_CFG_INTDIR}/gcmt-dll.dll ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-		)
-		add_custom_target(gcmt-dll.dll ALL
-			DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gcmt-dll.dll
-		)
-		add_dependencies(nekovm gcmt-dll.dll)
+		if (NOT STATIC_BOEHMGC)
+			list(APPEND WINDOWS_DLLS ${GCMT_DLL})
+		endif()
 	else()
 		if (APPLE)
 			set(GC_CFLAGS "-w -mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET}")
@@ -356,7 +367,7 @@ if (STATIC_BOEHMGC OR WIN32)
 				make "CFLAGS=${GC_CFLAGS}"
 			INSTALL_COMMAND cd ${CMAKE_BINARY_DIR}/libs/src/BoehmGC &&
 				make install
-			BYPRODUCTS
+			BUILD_BYPRODUCTS
 				${GC_LIBRARIES}
 		)
 	endif()
@@ -597,8 +608,7 @@ if (WIN32)
 	set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION .)
 	include(InstallRequiredSystemLibraries)
 	install (
-		FILES
-			${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gcmt-dll.dll
+		FILES ${WINDOWS_DLLS}
 		DESTINATION .
 	)
 else()
@@ -639,7 +649,7 @@ endif()
 
 include(CMakePackageConfigHelpers)
 
-if(WIN32 AND NOT CYGWIN)
+if(WIN32 AND NOT (CYGWIN OR MINGW))
 	set(DEF_INSTALL_CMAKE_DIR CMake)
 else()
 	set(DEF_INSTALL_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/Neko)

@@ -70,7 +70,14 @@ if (WITH_APACHE)
 					-Wno-dev
 					-DAPR_INSTALL_PRIVATE_H=ON
 					-DINSTALL_PDB=OFF
+					-DMIN_WINDOWS_VER=0x1010
 			)
+			if (MINGW)
+				list(APPEND APR_CONFIGS
+					PATCH_COMMAND
+						${CMAKE_COMMAND} -Dapr_source=${CMAKE_BINARY_DIR}/libs/src/APR -P ${CMAKE_SOURCE_DIR}/cmake/patch_apr.cmake
+				)
+			endif()
 		else()
 			set(APR_CONFIGS
 				CONFIGURE_COMMAND cd ${CMAKE_BINARY_DIR}/libs/src/APR &&
@@ -137,7 +144,7 @@ if (WITH_APACHE)
 					make "CFLAGS=${PCRE_CFLAGS}"
 				INSTALL_COMMAND cd ${CMAKE_BINARY_DIR}/libs/src/PCRE &&
 					make install
-				BYPRODUCTS ${PCRE_LIBRARIES}
+				BUILD_BYPRODUCTS ${PCRE_LIBRARIES}
 			)
 		endif()
 
@@ -156,8 +163,8 @@ if (WITH_APACHE)
 			)
 		else()
 			set(APR_SOURCE
-				URL https://archive.apache.org/dist/apr/apr-1.5.2.tar.gz
-				URL_MD5 98492e965963f852ab29f9e61b2ad700
+				URL https://dlcdn.apache.org//apr/apr-1.6.5.tar.gz
+				URL_HASH SHA256=70dcf9102066a2ff2ffc47e93c289c8e54c95d8dda23b503f9e61bb0cbd2d105
 			)
 		endif()
 		ExternalProject_Add(APR
@@ -166,6 +173,13 @@ if (WITH_APACHE)
 			${APR_CONFIGS}
 		)
 		set_target_properties(APR PROPERTIES ${EP_PROPS})
+		if (WIN32 AND NOT MINGW)
+			set(APR_LIBRARY	${CMAKE_BINARY_DIR}/libs/src/install-prefix/lib/libapr-1.lib)
+		elseif (APPLE)
+			set(APR_LIBRARY ${CMAKE_BINARY_DIR}/libs/src/install-prefix/lib/libapr-2.a)
+		else()
+			set(APR_LIBRARY	${CMAKE_BINARY_DIR}/libs/src/install-prefix/lib/libapr-1.a)
+		endif()
 
 		if(WIN32)
 			set(APRutil_CONFIGS
@@ -174,7 +188,14 @@ if (WITH_APACHE)
 					-Wno-dev
 					-DOPENSSL_ROOT_DIR=${CMAKE_BINARY_DIR}/libs/src/install-prefix
 					-DINSTALL_PDB=OFF
+					-DAPR_LIBRARIES=${APR_LIBRARY}
 			)
+			if (MINGW)
+				list(APPEND APRutil_CONFIGS
+					PATCH_COMMAND cd ${CMAKE_BINARY_DIR}/libs/src/APRutil &&
+						patch -p1 --forward -i ${CMAKE_SOURCE_DIR}/cmake/apr-util-apu_version.patch
+				)
+			endif()
 		elseif(NOT APPLE)
 			set(APRutil_CONFIGS
 				CONFIGURE_COMMAND cd ${CMAKE_BINARY_DIR}/libs/src/APRutil &&
@@ -220,10 +241,6 @@ if (WITH_APACHE)
 				${CMAKE_BINARY_DIR}/libs/src/Apache/os/win32
 				${CMAKE_BINARY_DIR}/libs/src/Apache-build
 			)
-			set(APACHE_LIBRARIES
-				${CMAKE_BINARY_DIR}/libs/src/install-prefix/lib/libapr-1.lib
-				${CMAKE_BINARY_DIR}/libs/src/Apache-build/${CMAKE_CFG_INTDIR}/libhttpd.lib
-			)
 		else()
 			set(APACHE_CONFIG_SETTINGS
 					${APR_CONF}
@@ -252,8 +269,11 @@ if (WITH_APACHE)
 			else()
 				list(APPEND APACHE_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/libs/src/install-prefix/include/apr-1)
 			endif()
-			set(APACHE_LIBRARIES
-
+		endif()
+		set(APACHE_LIBRARIES ${APR_LIBRARY})
+		if (WIN32)
+			list(APPEND APACHE_LIBRARIES
+				${CMAKE_BINARY_DIR}/libs/src/Apache-build/${CMAKE_CFG_INTDIR}/libhttpd.lib
 			)
 		endif()
 		set(APACHE_DEPENDENCIES

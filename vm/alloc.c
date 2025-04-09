@@ -126,6 +126,7 @@ void neko_gc_init() {
 	GC_dont_expand = 1;
 #endif
 	GC_clear_roots();
+	GC_allow_register_threads();
 #if defined(GC_LOG) && defined(NEKO_POSIX)
 	{
 		struct sigaction act;

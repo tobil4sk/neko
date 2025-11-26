@@ -27,13 +27,15 @@ typedef int SOCKET;
 
 #include "mbedtls/platform.h"
 #include "mbedtls/error.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
 #include "mbedtls/md.h"
 #include "mbedtls/pk.h"
 #include "mbedtls/oid.h"
 #include "mbedtls/x509_crt.h"
 #include "mbedtls/ssl.h"
+#if MBEDTLS_VERSION_MAJOR < 4
+#include "mbedtls/entropy.h"
+#include "mbedtls/ctr_drbg.h"
+#endif
 
 #ifdef MBEDTLS_PSA_CRYPTO_C
 #include <psa/crypto.h>
@@ -50,8 +52,10 @@ DEFINE_KIND( k_cert );
 DEFINE_KIND( k_pkey );
 
 static vkind k_socket;
+#if MBEDTLS_VERSION_MAJOR < 4
 static mbedtls_entropy_context entropy;
 static mbedtls_ctr_drbg_context ctr_drbg;
+#endif
 
 
 static void free_cert( value v ){
@@ -346,7 +350,9 @@ static value conf_new( value server ) {
 #ifdef NEKO_WINDOWS
 	mbedtls_ssl_conf_verify( conf, verify_callback, NULL );
 #endif
+#if MBEDTLS_VERSION_MAJOR < 4
 	mbedtls_ssl_conf_rng( conf, mbedtls_ctr_drbg_random, &ctr_drbg );
+#endif
 	return alloc_abstract( k_ssl_conf, conf );
 }
 
@@ -690,7 +696,7 @@ static value key_from_der( value data, value pub ){
 	if( val_bool(pub) )
 		r = mbedtls_pk_parse_public_key( pk, (const unsigned char*)val_string(data), val_strlen(data) );
 	else
-#if MBEDTLS_VERSION_MAJOR >= 3
+#if MBEDTLS_VERSION_MAJOR == 3
 		r = mbedtls_pk_parse_key( pk, (const unsigned char*)val_string(data), val_strlen(data), NULL, 0, mbedtls_ctr_drbg_random, &ctr_drbg );
 #else
 		r = mbedtls_pk_parse_key( pk, (const unsigned char*)val_string(data), val_strlen(data), NULL, 0 );
@@ -720,7 +726,7 @@ static value key_from_pem(value data, value pub, value pass){
 	mbedtls_pk_init(pk);
 	if( val_bool(pub) )
 		r = mbedtls_pk_parse_public_key( pk, buf, len );
-#if MBEDTLS_VERSION_MAJOR >= 3
+#if MBEDTLS_VERSION_MAJOR == 3
 	else if( val_is_null(pass) )
 		r = mbedtls_pk_parse_key( pk, buf, len, NULL, 0, mbedtls_ctr_drbg_random, &ctr_drbg );
 	else
@@ -786,10 +792,10 @@ static value dgst_sign(value data, value key, value alg){
 	out = alloc_empty_string(MBEDTLS_MPI_MAX_SIZE);
 #endif
 	buf = (unsigned char *)val_string(out);
-#if MBEDTLS_VERSION_MAJOR >= 3
+#if MBEDTLS_VERSION_MAJOR == 3
 	if( (r = mbedtls_pk_sign( val_pkey(key), mbedtls_md_get_type(md), hash, mbedtls_md_get_size(md), buf, MBEDTLS_PK_SIGNATURE_MAX_SIZE, &olen, mbedtls_ctr_drbg_random, &ctr_drbg )) != 0 )
 #else
-	if( (r = mbedtls_pk_sign( val_pkey(key), mbedtls_md_get_type(md), hash, 0, buf, &olen, mbedtls_ctr_drbg_random, &ctr_drbg )) != 0 )
+	if( (r = mbedtls_pk_sign( val_pkey(key), mbedtls_md_get_type(md), hash, mbedtls_md_get_size(md), buf, &olen, mbedtls_ctr_drbg_random, &ctr_drbg )) != 0 )
 #endif
 		return ssl_error(r);
 
@@ -863,10 +869,12 @@ void ssl_main() {
                            threading_mutex_lock_alt, threading_mutex_unlock_alt );
 #endif
 
+#if MBEDTLS_VERSION_MAJOR < 4
 	// Init RNG
 	mbedtls_entropy_init( &entropy );
 	mbedtls_ctr_drbg_init( &ctr_drbg );
 	mbedtls_ctr_drbg_seed( &ctr_drbg, mbedtls_entropy_func, &entropy, NULL, 0 );
+#endif
 
 #ifdef MBEDTLS_PSA_CRYPTO_C
 	psa_crypto_init();

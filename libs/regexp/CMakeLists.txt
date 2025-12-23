@@ -9,8 +9,8 @@ if (STATIC_PCRE2)
 		COMPILE_DEFINITIONS PCRE2_STATIC_LINK
 	)
 	set(PCRE2_CONFIG
-		URL https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.42/pcre2-10.42.tar.gz
-		URL_HASH SHA256=c33b418e3b936ee3153de2c61cc638e7e4fe3156022a5c77d0711bcbb9d64f1f
+		URL https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.47/pcre2-10.47.tar.gz
+		URL_HASH SHA256=c08ae2388ef333e8403e670ad70c0a11f1eed021fd88308d7e02f596fcd9dc16
 	)
 	if (WIN32)
 		ExternalProject_Add(pcre2

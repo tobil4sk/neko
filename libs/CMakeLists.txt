@@ -157,8 +157,8 @@ if (WITH_APACHE)
 
 		ExternalProject_Add(APR
 			${EP_CONFIGS}
-			URL https://archive.apache.org/dist/apr/apr-1.7.2.tar.gz
-			URL_HASH SHA256=3d8999b216f7b6235343a4e3d456ce9379aa9a380ffb308512f133f0c5eb2db9
+			URL https://archive.apache.org/dist/apr/apr-1.7.6.tar.gz
+			URL_HASH SHA256=6a10e7f7430510600af25fabf466e1df61aaae910bf1dc5d10c44a4433ccc81d
 			${APR_CONFIGS}
 		)
 		set_target_properties(APR PROPERTIES ${EP_PROPS})
@@ -166,8 +166,8 @@ if (WITH_APACHE)
 		if(WIN32)
 			ExternalProject_Add(EXPAT
 				${EP_CONFIGS}
-				URL https://github.com/libexpat/libexpat/releases/download/R_2_5_0/expat-2.5.0.tar.gz
-				URL_HASH SHA256=6b902ab103843592be5e99504f846ec109c1abb692e85347587f237a4ffa1033
+				URL https://github.com/libexpat/libexpat/releases/download/R_2_7_3/expat-2.7.3.tar.gz
+				URL_HASH SHA256=821ac9710d2c073eaf13e1b1895a9c9aa66c1157a99635c639fbff65cdbdd732
 				CMAKE_ARGS
 					-DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/libs/src/install-prefix
 					-Wno-dev

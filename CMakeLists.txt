@@ -263,24 +263,30 @@ add_executable(nekovm
 
 # We need to build from source on Windows regardless
 if (STATIC_BOEHMGC OR WIN32)
-	ExternalProject_Add(libatomic_ops
-		${EP_CONFIGS}
-		URL https://github.com/bdwgc/libatomic_ops/releases/download/v7.10.0/libatomic_ops-7.10.0.tar.gz
-		URL_HASH SHA256=0db3ebff755db170f65e74a64ec4511812e9ee3185c232eeffeacd274190dfb0
-		CONFIGURE_COMMAND echo skip config
-		BUILD_COMMAND echo skip build
-		INSTALL_COMMAND echo skip install
-	)
-	set_target_properties(libatomic_ops PROPERTIES ${EP_PROPS})
-
 	set (
 		BoehmGC_CONFIGS
-		DEPENDS libatomic_ops
 		URL https://github.com/ivmai/bdwgc/releases/download/v8.2.10/gc-8.2.10.tar.gz
 		URL_HASH SHA256=832cf4f7cf676b59582ed3b1bbd90a8d0e0ddbc3b11cb3b2096c5177ce39cc47
 	)
 
 	set(GC_INCLUDE_DIR ${CMAKE_BINARY_DIR}/libs/src/BoehmGC-build/include)
+
+	if (MSVC)
+		ExternalProject_Add(libatomic_ops
+			${EP_CONFIGS}
+			URL https://github.com/bdwgc/libatomic_ops/releases/download/v7.10.0/libatomic_ops-7.10.0.tar.gz
+			URL_HASH SHA256=0db3ebff755db170f65e74a64ec4511812e9ee3185c232eeffeacd274190dfb0
+			CONFIGURE_COMMAND echo skip config
+			BUILD_COMMAND echo skip build
+			INSTALL_COMMAND echo skip install
+		)
+		set_target_properties(libatomic_ops PROPERTIES ${EP_PROPS})
+
+		list(APPEND BoehmGC_CONFIGS
+			DEPENDS libatomic_ops
+			PATCH_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/libs/src/libatomic_ops ${CMAKE_BINARY_DIR}/libs/src/BoehmGC/libatomic_ops
+		)
+	endif()
 
 	if (WIN32)
 		set(GC_LIBRARIES
@@ -295,7 +301,6 @@ if (STATIC_BOEHMGC OR WIN32)
 				-Denable_thread_local_alloc=OFF
 				-DCMAKE_USE_WIN32_THREADS_INIT=ON
 				-DCMAKE_CXX_STANDARD=14
-			PATCH_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/libs/src/libatomic_ops ${CMAKE_BINARY_DIR}/libs/src/BoehmGC/libatomic_ops
 			INSTALL_COMMAND
 				${CMAKE_COMMAND} -E copy_directory
 					${CMAKE_BINARY_DIR}/libs/src/BoehmGC/include
@@ -323,7 +328,6 @@ if (STATIC_BOEHMGC OR WIN32)
 		ExternalProject_Add(BoehmGC
 			${EP_CONFIGS}
 			${BoehmGC_CONFIGS}
-			PATCH_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/libs/src/libatomic_ops ${CMAKE_BINARY_DIR}/libs/src/BoehmGC/libatomic_ops
 			CONFIGURE_COMMAND cd ${CMAKE_BINARY_DIR}/libs/src/BoehmGC &&
 				./configure
 					--prefix=${CMAKE_BINARY_DIR}/libs/src/BoehmGC-build
@@ -350,7 +354,9 @@ endif()
 
 add_custom_target(download_deps)
 if (STATIC_BOEHMGC OR WIN32)
-	add_dependencies(download_deps libatomic_ops-download)
+	if (MSVC)
+		add_dependencies(download_deps libatomic_ops-download)
+	endif()
 	add_dependencies(download_deps BoehmGC-download)
 endif()
 

@@ -27,8 +27,6 @@ jobs:
             runner: ubuntu-24.04
             APT_SUFFIX: :i386
             cmake_toolchain_flag: -DCMAKE_TOOLCHAIN_FILE=cmake/linux32.toolchain.cmake
-          - arch: i386
-            cmake_extra_flags: -DWITH_UI=OFF
 
     runs-on: ${{ matrix.runner }}
     steps:
@@ -55,7 +53,7 @@ jobs:
       - name: CMake
         run: |
           cmake . -DSTATIC_DEPS=${{ matrix.STATIC_DEPS }} -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-            ${{ matrix.cmake_toolchain_flag }} ${{ matrix.cmake_extra_flags }}
+            ${{ matrix.cmake_toolchain_flag }}
 
       - name: Download dependencies
         run: ninja download_deps || ninja download_deps || ninja download_deps

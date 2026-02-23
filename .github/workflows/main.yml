@@ -9,7 +9,7 @@ jobs:
     name: linux
     strategy:
       matrix:
-        arch: [arm64, amd64]
+        arch: [arm64, amd64, i386]
         link_type: [static, dynamic]
         include:
           - link_type: static
@@ -21,10 +21,22 @@ jobs:
             runner: ubuntu-22.04
           - arch: arm64
             runner: ubuntu-22.04-arm
+          - arch: i386
+            runner: ubuntu-24.04
+            APT_SUFFIX: :i386
+            cmake_toolchain_flag: -DCMAKE_TOOLCHAIN_FILE=cmake/linux32.toolchain.cmake
+
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Install toolchain
+        if: matrix.arch == 'i386'
+        run: |
+         sudo dpkg --add-architecture i386
+         sudo apt-get update -y
+         sudo apt-get install -qqy gcc-multilib g++-multilib
 
       - name: Install dependencies
         run: |
@@ -34,10 +46,12 @@ jobs:
       - name: Install dynamic dependencies
         if: ${{ matrix.link_type == 'dynamic' }}
         run: |
-         sudo apt-get install -qqy libgc-dev libpcre2-dev zlib1g-dev apache2-dev libmysqlclient-dev libsqlite3-dev libmbedtls-dev
+         sudo apt-get install -qqy {libgc,libpcre2,zlib1g,apache2,libmysqlclient,libsqlite3,libmbedtls}-dev${{ matrix.APT_SUFFIX }}
 
       - name: CMake
-        run: cmake . -DSTATIC_DEPS=${{ matrix.STATIC_DEPS }} -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
+        run: |
+          cmake . -DSTATIC_DEPS=${{ matrix.STATIC_DEPS }} -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+            ${{ matrix.cmake_toolchain_flag }}
 
       - name: Download dependencies
         run: ninja download_deps || ninja download_deps || ninja download_deps

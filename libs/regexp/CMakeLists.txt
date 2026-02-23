@@ -31,10 +31,9 @@ if (STATIC_PCRE2)
 			debug ${CMAKE_BINARY_DIR}/libs/src/install-prefix/lib/pcre2-8-staticd.lib
 		)
 	else()
+		set(PCRE2_CFLAGS "-w ${CMAKE_C_FLAGS}")
 		if (APPLE)
-			set(PCRE2_CFLAGS "-w -mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET}")
-		else()
-			set(PCRE2_CFLAGS "-w")
+			list(APPEND PCRE2_CFLAGS "-mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET}")
 		endif()
 		set(PCRE2_LIBRARIES
 			${CMAKE_BINARY_DIR}/libs/src/install-prefix/lib/libpcre2-8.a

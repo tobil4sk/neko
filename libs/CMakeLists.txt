@@ -3,6 +3,7 @@ add_subdirectory(std)
 
 if (STATIC_ZLIB)
 	set(ZLIB_CMAKE_ARGS
+		-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
 		-DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/libs/src/install-prefix
 		-Wno-dev
 	)
@@ -127,10 +128,9 @@ if (WITH_APACHE)
 			set(EXPAT_DEP "")
 		endif()
 
+		set(APACHE_CFLAGS "-w ${CMAKE_C_FLAGS}")
 		if (APPLE)
-			set(APACHE_CFLAGS "-w -mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET}")
-		else()
-			set(APACHE_CFLAGS "-w")
+			list(APPEND APACHE_CFLAGS "-mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET}")
 		endif()
 
 		if(WIN32)

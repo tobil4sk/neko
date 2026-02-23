@@ -310,10 +310,9 @@ if (STATIC_BOEHMGC OR WIN32)
 		)
 		add_dependencies(nekovm gcmt-dll.dll)
 	else()
+		set(GC_CFLAGS "-w ${CMAKE_C_FLAGS}")
 		if (APPLE)
-			set(GC_CFLAGS "-w -mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET}")
-		else()
-			set(GC_CFLAGS "-w")
+			list(APPEND GC_CFLAGS "-mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET}")
 		endif()
 
 		set(GC_LIBRARIES

@@ -23,6 +23,8 @@ if (STATIC_OPENSSL)
 			elseif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
 				set(OPENSSL_CONFIGURE_COMMAND ./Configure darwin64-arm64-cc "-mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET}")
 			endif()
+		elseif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "i386")
+			set(OPENSSL_CONFIGURE_COMMAND ./Configure linux-x86)
 		else()
 			set(OPENSSL_CONFIGURE_COMMAND ./config)
 		endif()
@@ -107,6 +109,7 @@ if (STATIC_MARIADBCONNECTOR)
 			-DWITH_SSL=OPENSSL
 			${OPENSSL_CONF}
 			${ZLIB_CONF}
+			-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
 		PATCH_COMMAND ${CMAKE_COMMAND}
 			-Dmariadb_source=${CMAKE_BINARY_DIR}/libs/src/MariaDBConnector
 			-Dprocessor=${CMAKE_SYSTEM_PROCESSOR}

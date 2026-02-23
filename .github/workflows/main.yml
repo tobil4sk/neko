@@ -43,6 +43,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -qqy
+          apt-cache depends libgtk-3-dev:i386
+          sudo apt-get install -o Debug::pkgProblemResolver=yes libgtk-3-dev:i386
           sudo apt-get install -qqy ninja-build libgtk-3-dev${{ matrix.APT_SUFFIX }}
 
       - name: Install dynamic dependencies

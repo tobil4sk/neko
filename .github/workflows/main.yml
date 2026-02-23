@@ -9,7 +9,9 @@ jobs:
     name: linux
     strategy:
       matrix:
-        arch: [arm64, amd64, i386]
+        arch: [i386]
+        # link_type: [static]
+        # arch: [arm64, amd64, i386]
         link_type: [static, dynamic]
         include:
           - link_type: static
@@ -17,10 +19,10 @@ jobs:
             STATIC_DEPS: all
           - link_type: dynamic
             STATIC_DEPS: none
-          - arch: amd64
-            runner: ubuntu-22.04
-          - arch: arm64
-            runner: ubuntu-22.04-arm
+          # - arch: amd64
+          #   runner: ubuntu-22.04
+          # - arch: arm64
+          #   runner: ubuntu-22.04-arm
           - arch: i386
             runner: ubuntu-24.04
             APT_SUFFIX: :i386
@@ -89,6 +91,7 @@ jobs:
           path: bin/neko-${{ env.NEKO_VERSION }}-linux*.tar.gz
 
   mac-build:
+    if: false
     name: mac
     strategy:
       matrix:
@@ -157,6 +160,7 @@ jobs:
           path: bin/neko-${{ env.NEKO_VERSION }}-osx*.tar.gz
 
   windows-build:
+    if: false
     name: windows
     strategy:
       matrix:
